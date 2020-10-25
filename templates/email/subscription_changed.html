@@ -1,0 +1,17 @@
+{% autoescape off %}
+
+You user details have been changed on {{ site_name }} for {{ user.username }}
+
+{% if email %}
+Email address: {{ email }}
+{% endif %}
+{% if first_name %}
+First Name: {{ first_name }}
+{% endif %}
+{% if email %}
+Last Name: {{ last_name }}
+{% endif %}
+
+{% block salutation %}The {{ site_name }} team{% endblock %}
+
+{% endautoescape %}

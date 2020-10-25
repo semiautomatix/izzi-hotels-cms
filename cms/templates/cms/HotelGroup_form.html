@@ -1,0 +1,53 @@
+
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+    
+<p>
+    <a class="btn btn-light" href="{% url 'cms_HotelGroup_list' %}">
+    HotelGroup Listing
+    </a>
+</p>
+    
+<form method="post">
+{% csrf_token %}
+  <div class="form-group row">
+  <label class="col-sm-2 col-form-label" for="logo">logo: </label>
+  <input class="form-control col-sm-10" id="logo" type="text" name="logo" value="{{ object.logo }}">
+  </div>
+  <div class="form-group row">
+  <label class="col-sm-2 col-form-label" for="head_office_postal_code">head_office_postal_code: </label>
+  <input class="form-control col-sm-10" id="head_office_postal_code" type="text" name="head_office_postal_code" value="{{ object.head_office_postal_code }}">
+  </div>
+  <div class="form-group row">
+  <label class="col-sm-2 col-form-label" for="head_office_country">head_office_country: </label>
+  <input class="form-control col-sm-10" id="head_office_country" type="text" name="head_office_country" value="{{ object.head_office_country }}">
+  </div>
+  <div class="form-group row">
+  <label class="col-sm-2 col-form-label" for="hotel_group_name">hotel_group_name: </label>
+  <input class="form-control col-sm-10" id="hotel_group_name" type="text" name="hotel_group_name" value="{{ object.hotel_group_name }}">
+  </div>
+  <div class="form-group row">
+  <label class="col-sm-2 col-form-label" for="head_office_address">head_office_address: </label>
+  <input class="form-control col-sm-10" id="head_office_address" type="text" name="head_office_address" value="{{ object.head_office_address }}">
+  </div>
+  <div class="form-group row">
+  <label class="col-sm-2 col-form-label" for="head_office_city">head_office_city: </label>
+  <input class="form-control col-sm-10" id="head_office_city" type="text" name="head_office_city" value="{{ object.head_office_city }}">
+  </div>
+  <div class="form-group row">
+  <label class="col-sm-2 col-form-label" for="last_updated">last_updated: </label>
+  <input class="form-control col-sm-10" id="last_updated" type="date" name="last_updated" value="{{ object.last_updated }}" disabled>
+  </div>
+  <div class="form-group row">
+  <label class="col-sm-2 col-form-label" for="head_office_geolocation">head_office_geolocation: </label>
+  <input class="form-control col-sm-10" id="head_office_geolocation" type="text" name="head_office_geolocation" value="{{ object.head_office_geolocation }}">
+  </div>
+  <div class="form-group row">
+  <label class="col-sm-2 col-form-label" for="created">created: </label>
+  <input class="form-control col-sm-10" id="created" type="date" name="created" value="{{ object.created }}" disabled>
+  </div>
+  <input type="submit" value="Save" class="btn btn-primary">
+</form>
+
+{% endblock %}

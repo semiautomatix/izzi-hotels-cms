@@ -1,0 +1,22 @@
+
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+    
+<p>
+    <a class="btn btn-light" href="{% url 'mobile_ServiceBooking_list' %}">
+    ServiceBooking Listing
+    </a>
+</p>
+    
+<table class="table">
+    <tr><td>created</td><td>{{ object.created }}</td></tr>
+    <tr><td>last_updated</td><td>{{ object.last_updated }}</td></tr>
+    <tr><td>check_out_date_time</td><td>{{ object.check_out_date_time }}</td></tr>
+    <tr><td>end_date_time</td><td>{{ object.end_date_time }}</td></tr>
+    <tr><td>check_in_date_time</td><td>{{ object.check_in_date_time }}</td></tr>
+    <tr><td>start_date_time</td><td>{{ object.start_date_time }}</td></tr>
+</table>
+<a class="btn btn-primary" href="{{object.get_update_url}}">Edit</a>
+
+{% endblock %}

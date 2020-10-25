@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <title>Big Analytics</title>
+</head>
+
+<body>
+  <!-- Chartjs libraries -->
+  <script src="https://code.highcharts.com/highcharts.js"></script>
+
+  <div id="containerx" style="min-width: 310px; height: 400px; margin: 0 auto" class="border"></div>
+  <script src="https://code.highcharts.com/modules/drilldown.js"></script>
+
+  <script>   
+    console.log("data", "{{ table_data }}");
+    Highcharts.chart('containerx', {
+      chart: {
+        type: 'pie'
+      },
+      title: {
+          text: 'Basic drilldown'
+      },
+      xAxis: {
+          type: 'category'
+      },
+
+      legend: {
+          enabled: false
+      },
+      series: [{
+        name: 'Things',
+        colorByPoint: true,
+        data: [{
+            name: 'Animals',
+            y: 5,
+            drilldown: 'animals'
+        }, {
+            name: 'Fruits',
+            y: 2,
+            drilldown: 'fruits'
+        }, {
+            name: 'Cars',
+            y: 4,
+            drilldown: 'cars'
+        }]
+      }],
+      drilldown: {
+          series: [{
+              id: 'animals',
+              data: [
+                  ['Cats', 4],
+                  ['Dogs', 2],
+                  ['Cows', 1],
+                  ['Sheep', 2],
+                  ['Pigs', 1]
+              ]
+          }, {
+              id: 'fruits',
+              data: [
+                  ['Apples', 4],
+                  ['Oranges', 2]
+              ]
+          }, {
+              id: 'cars',
+              data: [
+                  ['Toyota', 4],
+                  ['Opel', 2],
+                  ['Volkswagen', 2]
+              ]
+          }]
+      }
+    });
+    
+  </script>
+
+</body>
+
+</html>

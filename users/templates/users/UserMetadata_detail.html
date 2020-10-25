@@ -1,0 +1,29 @@
+
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+    
+<p>
+    <a class="btn btn-light" href="{% url 'users_UserMetadata_list' %}">
+    UserMetadata Listing
+    </a>
+</p>
+    
+<table class="table">
+    <tr><td>age_range</td><td>{{ object.age_range }}</td></tr>
+    <tr><td>email_address</td><td>{{ object.email_address }}</td></tr>
+    <tr><td>profile_picture</td><td>{{ object.profile_picture }}</td></tr>
+    <tr><td>user_type</td><td>{{ object.user_type }}</td></tr>
+    <tr><td>middle_name</td><td>{{ object.middle_name }}</td></tr>
+    <tr><td>first_name</td><td>{{ object.first_name }}</td></tr>
+    <tr><td>last_name</td><td>{{ object.last_name }}</td></tr>
+    <tr><td>profile_picture</td><td>{{ object.profile_picture }}</td></tr>
+    <tr><td>created</td><td>{{ object.created }}</td></tr>
+    <tr><td>last_updated</td><td>{{ object.last_updated }}</td></tr>
+    <tr><td>nationality</td><td>{{ object.nationality }}</td></tr>
+    <tr><td>position</td><td>{{ object.position }}</td></tr>
+    <tr><td>gender</td><td>{{ object.gender }}</td></tr>
+</table>
+<a class="btn btn-primary" href="{{object.get_update_url}}">Edit</a>
+
+{% endblock %}

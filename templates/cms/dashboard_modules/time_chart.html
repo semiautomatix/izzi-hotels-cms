@@ -1,0 +1,223 @@
+{% load humanize %}
+
+<!doctype html>
+<html lang="en">
+
+<head>
+  <title>Big Analytics</title>  
+  <link rel="stylesheet" href="//fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="//code.getmdl.io/1.3.0/material.indigo-pink.min.css">  
+  <style>
+    .daterangepicker table {
+      background: unset;
+      border-radius: unset;
+      overflow-x: unset;
+      box-shadow: unset;
+    }    
+    .daterangepicker table thead th {
+      background: unset;
+      color: unset;
+      text-transform: unset;
+      transition: unset;  
+      font-weight: unset; 
+      padding: unset;   
+    }
+    .daterangepicker table tr {
+      border-bottom: unset;
+    }    
+    .daterangepicker table tr td {
+      padding: unset;
+    }    
+    .daterangepicker ul li {
+      list-style-type: unset;
+      line-height: 12px;
+    }  
+  </style>
+  <link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+  <script
+    src="//code.jquery.com/jquery-3.4.1.min.js"
+    integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+    crossorigin="anonymous">
+  </script>  
+  <script defer src="//code.getmdl.io/1.3.0/material.min.js"></script> 
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>  
+</head>
+
+<body>
+  <!-- Chartjs libraries -->
+
+  <div id="{{ module.children.prefix }}_container" style="min-width: 310px; height: 400px; margin: 0 auto" class="border">  
+  </div>
+
+  <script>   
+  console.log('Is global (i.e. global administrator can view hotel groups) can determine if we should show drill downs or not.')
+    const {{ module.children.prefix }}_chart = Highcharts.chart('{{ module.children.prefix }}_container', {
+      chart: {
+        type: 'column'
+      },
+      colors: ['#FFFFFF','#FFFFEE','#F2F2F2','#f0f0ee','#E3E3EA','#DADBF2','#D7D7DD','#CCCEFF','#BBBBDD','#AABBDD','#ADAFD8','#999EFF','#8888AA','#797FF2','#2E3164'].reverse(),
+      title: {
+          text: `<div>
+            <span style="color: #6f7e95; font-family: Arial,sans-serif">{{ module.children.title }}</span>
+            <div>
+              <div style="float: right">
+                <div id="{{ module.children.prefix }}_daterange" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc; width: 100%">
+                  <i class="fa fa-caret-down" style="color: #6f7e95"></i><span class="mdl-switch__label" style="color: #6f7e95; font-family: Arial,sans-serif"></span> 
+                </div>          
+              </div>            
+            </div>
+          </div>`, // https://www.daterangepicker.com/
+          useHTML: true,
+          align: "left",
+      },
+      xAxis: {
+        type: 'category'
+      },   
+      yAxis: {
+        title: {
+            text: 'Total bookings'
+        }
+      },         
+      tooltip: {
+        headerFormat: '<span style="font-size:11px">{series.name}</span><br>',
+        pointFormat: '<span style="color:{point.color}">{point.name}</span>: <b>{point.y}</b> bookings<br/>'
+      },
+      legend: {
+          enabled: false
+      },
+      series: [{
+        name: 'Hotel Group',
+        colorByPoint: true,
+        data: []
+      }],
+      drilldown: {
+        series: []
+      },
+      plotOptions: {
+        bar: {
+          dataLabels: {
+              enabled: true
+          }
+        },
+        column: {
+          groupPadding: 0.44,
+          pointPadding: 0.2,
+          // pointRange: 9
+        },
+      }, 
+      credits: {
+        enabled: false
+      },        
+    });    
+
+    /*function redraw(cities, data) {
+      const drilldown_hotels = JSON.parse(("{{ module.children.drilldown_hotels }}").replace(/&quot;/g,'"'));
+      const drilldown_cities = JSON.parse(("{{ module.children.drilldown_cities }}").replace(/&quot;/g,'"'));
+      const series = cities ? drilldown_cities: drilldown_hotels;  // clone
+      chart.update({
+        drilldown: {
+            series
+        }
+      });   
+      const ddCurrent = chart.series[0].userOptions.id;
+      const ddSeries = chart.options.drilldown.series;
+      if (ddCurrent === undefined) {
+          chart.series[0].setData(chart.options.series[0].data);
+      } else {
+          for (let i = 0, ie = ddSeries.length; i < ie; ++i) {
+              if (ddSeries[i].id === ddCurrent) {
+                  chart.series[0].setData(ddSeries[i].data);
+              }
+          }
+      }                     
+    }*/
+
+    var {{ module.children.prefix }}_start = moment().subtract(6, 'month');
+    var {{ module.children.prefix }}_end = moment().add(6, 'month');
+
+    function cb(start, end) {
+      const chart = {{ module.children.prefix }}_chart;
+      chart.drillUp(); 
+
+      $('#{{ module.children.prefix }}_daterange span').html(start.format('MMM D, YYYY') + ' - ' + end.format('MMM D, YYYY'));
+
+      // filter data range
+      $.get( `{{ module.children.rest_url }}/?start_date=${start.format('YYYY-MM-DD')}&end_date=${end.format('YYYY-MM-DD')}&hotel_group_id=1`, function( data ) {
+        const filteredData = data.reduce(
+          (acc, cur) => {
+            const exists = acc.find(
+              (row) => row.name === cur.hotel_group__hotel_group_name
+            );
+            if (exists) {
+                exists.y += cur.total
+            } else {
+              acc.push({
+                name: cur.hotel_group__hotel_group_name,
+                drilldown: cur.hotel_group_id,
+                y: cur.total
+              })
+            }
+            return acc;
+          }, [] 
+        ) 
+        const drilldown_data = filteredData.map(
+          (series_data) => {        
+            const ddData = data.filter(
+              (row) => row.hotel_group_id === series_data.drilldown
+            ).reduce(
+              (acc, cur) => {
+                const exists = acc.find(
+                  (row) => row[0] === cur.hotel__hotel_name
+                );
+                if (exists) {
+                    exists[1] += cur.total 
+                } else {
+                  acc.push([cur.hotel__hotel_name, cur.total])
+                }
+                return acc;
+              }, [] 
+            );
+            return {
+              id: series_data.drilldown,
+              data: ddData
+            }
+          }
+        ) 
+        chart.series[0].remove(false);
+        chart.addSeries({
+          name: 'Hotel Group',
+          colorByPoint: true,
+          data: filteredData
+        });
+        chart.update({
+          drilldown: {
+              series: drilldown_data
+          }
+        });   
+        // chart.redraw(true); 
+      });
+    }
+
+    $( document ).ready(function() {
+      $('#{{ module.children.prefix }}_daterange').daterangepicker({
+        startDate: {{ module.children.prefix }}_start,
+        endDate: {{ module.children.prefix }}_end,
+        ranges: {
+           'Today': [moment(), moment()],
+           'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+           'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+           'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+           'This Month': [moment().startOf('month'), moment().endOf('month')],
+           'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+        }
+      }, cb);     
+    });  
+
+    cb({{ module.children.prefix }}_start, {{ module.children.prefix }}_end);  
+  //});
+  </script>
+</body>
+
+</html>

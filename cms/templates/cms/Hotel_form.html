@@ -1,0 +1,53 @@
+
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+    
+<p>
+    <a class="btn btn-light" href="{% url 'cms_Hotel_list' %}">
+    Hotel Listing
+    </a>
+</p>
+    
+<form method="post">
+{% csrf_token %}
+  <div class="form-group row">
+  <label class="col-sm-2 col-form-label" for="created">created: </label>
+  <input class="form-control col-sm-10" id="created" type="date" name="created" value="{{ object.created }}" disabled>
+  </div>
+  <div class="form-group row">
+  <label class="col-sm-2 col-form-label" for="geolocation">geolocation: </label>
+  <input class="form-control col-sm-10" id="geolocation" type="text" name="geolocation" value="{{ object.geolocation }}">
+  </div>
+  <div class="form-group row">
+  <label class="col-sm-2 col-form-label" for="postal_code">postal_code: </label>
+  <input class="form-control col-sm-10" id="postal_code" type="text" name="postal_code" value="{{ object.postal_code }}">
+  </div>
+  <div class="form-group row">
+  <label class="col-sm-2 col-form-label" for="country">country: </label>
+  <input class="form-control col-sm-10" id="country" type="text" name="country" value="{{ object.country }}">
+  </div>
+  <div class="form-group row">
+  <label class="col-sm-2 col-form-label" for="city">city: </label>
+  <input class="form-control col-sm-10" id="city" type="text" name="city" value="{{ object.city }}">
+  </div>
+  <div class="form-group row">
+  <label class="col-sm-2 col-form-label" for="hotel_name">hotel_name: </label>
+  <input class="form-control col-sm-10" id="hotel_name" type="text" name="hotel_name" value="{{ object.hotel_name }}">
+  </div>
+  <div class="form-group row">
+  <label class="col-sm-2 col-form-label" for="last_updated">last_updated: </label>
+  <input class="form-control col-sm-10" id="last_updated" type="date" name="last_updated" value="{{ object.last_updated }}" disabled>
+  </div>
+  <div class="form-group row">
+  <label class="col-sm-2 col-form-label" for="address">address: </label>
+  <input class="form-control col-sm-10" id="address" type="text" name="address" value="{{ object.address }}">
+  </div>
+  <div class="form-group row">
+  <label class="col-sm-2 col-form-label" for="logo">logo: </label>
+  <input class="form-control col-sm-10" id="logo" type="text" name="logo" value="{{ object.logo }}">
+  </div>
+  <input type="submit" value="Save" class="btn btn-primary">
+</form>
+
+{% endblock %}

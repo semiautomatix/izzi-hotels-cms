@@ -1,0 +1,17 @@
+{% autoescape off %}
+
+You user profile has been changed on {{ site_name }} for {{ user.username }}
+
+{% if profile_picture %}
+Profile
+{% endif %}
+{% if position %}
+Position: {{ position }}
+{% endif %}
+{% if gender %}
+Gender: {{ gender }}
+{% endif %}
+
+{% block salutation %}The {{ site_name }} team{% endblock %}
+
+{% endautoescape %}

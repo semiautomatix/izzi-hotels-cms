@@ -1,0 +1,225 @@
+{% load humanize %}
+
+<!doctype html>
+<html lang="en">
+
+<head>
+  <title>Big Analytics</title>  
+  <link rel="stylesheet" href="//fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="//code.getmdl.io/1.3.0/material.indigo-pink.min.css">  
+  <script
+    src="//code.jquery.com/jquery-3.4.1.min.js"
+    integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+    crossorigin="anonymous">
+  </script>  
+  <script defer src="//code.getmdl.io/1.3.0/material.min.js"></script> 
+</head>
+
+<body>
+  <div id="{{ module.children.prefix }}_container" style="min-width: 310px; height: 400px; margin: 0 auto" class="border">  
+  </div>
+
+  <script>  
+ 
+
+    class {{ module.children.prefix }}Chart {
+      constructor() {
+        this.data = {{ module.children.data|safe }};
+        this.isGlobal = this.data[0] && this.data[0].hotel_group_id;
+
+        this.categories = this.isGlobal ? this.data.reduce(
+          (acc, cur) => {
+            acc.add(cur.hotel_group__hotel_group_name);
+            return acc;
+          }, new Set()
+        ) : this.data.reduce(
+          (acc, cur) => {
+            acc.add(cur.hotel__hotel_name);
+            return acc;
+          }, new Set()
+        );
+
+        this.seriesLabels = this.data.reduce(
+          (acc, cur) => {
+            if (this.isGlobal) {
+              acc.add(cur.{{ module.children.series_label }} ? cur.{{ module.children.series_label }} : 'Unknown');
+            }
+            return acc;
+          }, new Set()
+        )
+
+        this.seriesData = Array.from(this.seriesLabels).map(
+          (seriesLabel) => {
+            const _data = [];
+            this.categories.forEach(
+              (category) => {
+                if (this.isGlobal) {
+                  const result = this.data.find(
+                    (row) => ((row.{{ module.children.series_label }} ? row.{{ module.children.series_label }} : 'Unknown') === seriesLabel) &&
+                      row.hotel_group__hotel_group_name === category
+                  )
+                  _data.push(result ? {
+                      name: category,
+                      y: result.total,
+                      drilldown: `${category}-${seriesLabel}`
+                    } : {
+                      name: category,
+                      y: 0,
+                      drilldown: `${category}-${seriesLabel}`
+                    }
+                  );
+                }
+              },
+            )
+            return {
+              name: seriesLabel,
+              data: _data
+            }
+          }
+        )
+
+        const drilldownData = this.seriesData.reduce(
+          (acc, cur) => {
+            return acc.concat(cur.data.map(
+              (row) => ({
+                id: `${row.name}-${cur.name}`,
+                name: cur.name,
+                data: this.data.filter(
+                  (_row) => ((_row.{{ module.children.series_label }} ? _row.{{ module.children.series_label }} : 'Unknown') === cur.name) &&
+                      _row.hotel_group__hotel_group_name === row.name
+                ).map(
+                  (_row) => [_row.hotel__hotel_name, _row.total]
+                )              
+              })
+            ));
+          }, []
+        );
+
+        this.chart = Highcharts.chart('{{ module.children.prefix }}_container', {
+          chart: {
+            type: 'column'
+          },
+          colors: ['#FFFFFF','#FFFFEE','#F2F2F2','#f0f0ee','#E3E3EA','#DADBF2','#D7D7DD','#CCCEFF','#BBBBDD','#AABBDD','#ADAFD8','#999EFF','#8888AA','#797FF2','#2E3164'].reverse(),
+          title: {
+              text: `<div>
+                <span style="color: #6f7e95; font-family: Arial,sans-serif">{{ module.children.title }}</span>
+                <div>
+                  <label class="mdl-switch mdl-js-switch mdl-js-ripple-effect" for="{{ module.children.prefix }}_switch-1" style="width: 0; margin: 10px;">
+                    <input type="checkbox" id="{{ module.children.prefix }}_switch-1" class="mdl-switch__input" onchange={{ module.children.prefix }}_chart.redraw(this.checked) />
+                    <span class="mdl-switch__label" style="color: #6f7e95; font-family: Arial,sans-serif;">Cities</span>
+                  </label>              
+                </div>
+              </div>`, 
+              useHTML: true,
+              align: "left",
+          },
+          xAxis: {
+            type: 'category'
+          },   
+          yAxis: {
+            title: {
+                text: 'Total bookings'
+            }
+          },         
+          tooltip: {
+            headerFormat: '<span style="font-size:11px">{series.name}</span><br>',
+            pointFormat: '<span style="color:{point.color}">{point.name}</span>: <b>{point.y}</b> bookings<br/>'
+          },
+          legend: {
+            reversed: true
+          },
+          plotOptions: {
+            bar: {
+              dataLabels: {
+                  enabled: true
+              }
+            },
+            column: {
+              groupPadding: 0.44,
+              pointPadding: 0.2,
+              // pointRange: 9
+            },
+          },    
+          series: this.seriesData,
+          lang: {
+            drillUpText: '<< Back to Hotel Groups'
+          },            
+          drilldown: {
+            allowPointDrilldown: false,
+            series: drilldownData,          
+            drillUpButton: {
+              position: {
+                x: 0,
+                y: -35,
+              }
+            },              
+          },    
+          credits: {
+            enabled: false
+          },        
+        });  
+      }
+      redraw(cities) {
+        const drilldownData = cities ? 
+        this.seriesData.reduce(
+          (acc, cur) => {
+            return acc.concat(cur.data.map(
+              (row) => ({
+                id: `${row.name}-${cur.name}`,
+                name: cur.name,
+                data: this.data.filter(
+                  (_row) => ((_row.{{ module.children.series_label }} ? _row.{{ module.children.series_label }} : 'Unknown') === cur.name) &&
+                      _row.hotel_group__hotel_group_name === row.name
+                ).map(
+                  (_row) => [_row.hotel__city, _row.total]
+                )        
+              })
+            ));
+          }, []
+        ) :         
+        this.seriesData.reduce(
+          (acc, cur) => {
+            return acc.concat(cur.data.map(
+              (row) => ({
+                id: `${row.name}-${cur.name}`,
+                name: cur.name,
+                data: this.data.filter(
+                  (_row) => ((_row.{{ module.children.series_label }} ? _row.{{ module.children.series_label }} : 'Unknown') === cur.name) &&
+                      _row.hotel_group__hotel_group_name === row.name
+                ).map(
+                  (_row) => [_row.hotel__hotel_name, _row.total]
+                )              
+              })
+            ));
+          }, []
+        );
+        this.chart.update({
+          drilldown: {
+              allowPointDrilldown: false,
+              series: drilldownData
+          }
+        });  
+        this.chart.series.forEach(
+          (series) => {
+            const ddCurrent = series.userOptions.id;
+            const ddSeries = this.chart.options.drilldown.series;
+            if (ddCurrent === undefined) {
+              this.chart.series[0].setData(this.chart.options.series[0].data);
+            } else {  
+              for (let i = 0, ie = ddSeries.length; i < ie; ++i) {       
+                if (ddSeries[i].id === ddCurrent) {
+                    series.setData(ddSeries[i].data);                    
+                }
+              }
+            }          
+          }
+        );
+        this.chart.redraw(true);   
+      }
+    }   
+    
+    {{ module.children.prefix }}_chart = new {{ module.children.prefix }}Chart();
+  </script>
+</body>
+
+</html>

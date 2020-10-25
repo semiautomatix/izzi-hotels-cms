@@ -1,0 +1,69 @@
+
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+    
+<p>
+    <a class="btn btn-light" href="{% url 'users_UserMetadata_list' %}">
+    UserMetadata Listing
+    </a>
+</p>
+    
+<form method="post">
+{% csrf_token %}
+  <div class="form-group row">
+  <label class="col-sm-2 col-form-label" for="age_range">age_range: </label>
+  <input class="form-control col-sm-10" id="age_range" type="text" name="age_range" value="{{ object.age_range }}">
+  </div>
+  <div class="form-group row">
+  <label class="col-sm-2 col-form-label" for="email_address">email_address: </label>
+  <input class="form-control col-sm-10" id="email_address" type="text" name="email_address" value="{{ object.email_address }}">
+  </div>
+  <div class="form-group row">
+  <label class="col-sm-2 col-form-label" for="profile_picture">profile_picture: </label>
+  <input class="form-control col-sm-10" id="profile_picture" type="text" name="profile_picture" value="{{ object.profile_picture }}">
+  </div>
+  <div class="form-group row">
+  <label class="col-sm-2 col-form-label" for="user_type">user_type: </label>
+  <input class="form-control col-sm-10" id="user_type" type="text" name="user_type" value="{{ object.user_type }}">
+  </div>
+  <div class="form-group row">
+  <label class="col-sm-2 col-form-label" for="middle_name">middle_name: </label>
+  <input class="form-control col-sm-10" id="middle_name" type="text" name="middle_name" value="{{ object.middle_name }}">
+  </div>
+  <div class="form-group row">
+  <label class="col-sm-2 col-form-label" for="first_name">first_name: </label>
+  <input class="form-control col-sm-10" id="first_name" type="text" name="first_name" value="{{ object.first_name }}">
+  </div>
+  <div class="form-group row">
+  <label class="col-sm-2 col-form-label" for="last_name">last_name: </label>
+  <input class="form-control col-sm-10" id="last_name" type="text" name="last_name" value="{{ object.last_name }}">
+  </div>
+  <div class="form-group row">
+  <label class="col-sm-2 col-form-label" for="profile_picture">profile_picture: </label>
+  <input class="form-control col-sm-10" id="profile_picture" type="text" name="profile_picture" value="{{ object.profile_picture }}">
+  </div>
+  <div class="form-group row">
+  <label class="col-sm-2 col-form-label" for="created">created: </label>
+  <input class="form-control col-sm-10" id="created" type="date" name="created" value="{{ object.created }}" disabled>
+  </div>
+  <div class="form-group row">
+  <label class="col-sm-2 col-form-label" for="last_updated">last_updated: </label>
+  <input class="form-control col-sm-10" id="last_updated" type="date" name="last_updated" value="{{ object.last_updated }}" disabled>
+  </div>
+  <div class="form-group row">
+  <label class="col-sm-2 col-form-label" for="nationality">nationality: </label>
+  <input class="form-control col-sm-10" id="nationality" type="text" name="nationality" value="{{ object.nationality }}">
+  </div>
+  <div class="form-group row">
+  <label class="col-sm-2 col-form-label" for="position">position: </label>
+  <input class="form-control col-sm-10" id="position" type="text" name="position" value="{{ object.position }}">
+  </div>  
+  <div class="form-group row">
+  <label class="col-sm-2 col-form-label" for="gender">gender: </label>
+  <input class="form-control col-sm-10" id="gender" type="text" name="gender" value="{{ object.gender }}">
+  </div>
+  <input type="submit" value="Save" class="btn btn-primary">
+</form>
+
+{% endblock %}

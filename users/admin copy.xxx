@@ -1,0 +1,245 @@
+from django.contrib import admin
+from django import forms
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.forms import UserCreationForm as BaseUserCreationForm
+from django.contrib.auth.models import Group, User
+from django.forms.models import BaseInlineFormSet
+from django.utils.translation import ugettext_lazy as _
+from cms.models import Hotel
+from django.contrib.admin.widgets import RelatedFieldWidgetWrapper
+
+from . import models
+
+# import the logging library
+import logging
+
+# Get an instance of a logger
+logger = logging.getLogger('django')
+logger.info("logger initalized " + __name__ + " admin.py")
+
+# function to allow for the addition of attributes to the options elements of a select
+# custom changes required  by jquery-chained https://github.com/tuupola/jquery_chained
+class DataGroupSelect(forms.widgets.Select):
+    
+    def __init__(self, attrs=None, choices=(), data={}):
+        super(DataGroupSelect, self).__init__(attrs, choices)
+        self.data = data
+ 
+    def create_option(self, name, value, label, selected, index, subindex=None, attrs=None): # noqa
+        option = super(DataGroupSelect, self).create_option(name, value, label, selected, index, subindex=None, attrs=None) # noqa
+        # adds the data-attributes to the attrs context var
+        for data_attr, values in self.data.items():
+            option['attrs'][data_attr] = values[option['value']]
+ 
+        return option
+
+# user metadata form
+class UserMetadataAdminForm(forms.ModelForm): 
+    hotel = None
+    class Meta:
+        model = models.UserMetadata     
+        fields = [
+            "age_range",
+            "profile_picture",
+            "middle_name",
+            "profile_picture",
+            "nationality",
+            "gender",
+            "user",
+            "hotel",
+            "hotel_group",
+        ]  
+    # filter the hotel fields based on group
+    # custom changes required  by jquery-chained https://github.com/tuupola/jquery_chained
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        data = {'data-chained': dict(Hotel.objects.values_list('id', 'hotel_group_id'))}
+        data['data-chained'][''] = ''  # empty option
+        '''
+        self.forms[0].fields['hotel'].widget = RelatedFieldWidgetWrapper(
+            DataGroupSelect(
+                choices=self.forms[0].fields['hotel'].choices,
+                data=data,
+            ),
+            self.forms[0].fields['hotel'].widget.rel,
+            self.forms[0].fields['hotel'].widget.admin_site,
+            self.forms[0].fields['hotel'].widget.can_add_related,
+            self.forms[0].fields['hotel'].widget.can_change_related,
+            self.forms[0].fields['hotel'].widget.can_delete_related,
+        )    
+        '''  
+     
+
+class UserMetadataAdmin(admin.ModelAdmin):
+    form = UserMetadataAdminForm
+    list_display = [
+        "age_range",
+        "profile_picture",
+        "middle_name",
+        "profile_picture",
+        "created",
+        "last_updated",
+        "nationality",
+        "gender",
+    ]
+    readonly_fields = [
+        "created",
+        "last_updated",
+    ]    
+
+
+admin.site.register(models.UserMetadata, UserMetadataAdmin)        
+
+# inline user metadata form appearing on user form
+class UserMetadataInlineFormSet(BaseInlineFormSet):    
+    def _construct_form(self, i, **kwargs):
+        form = super(UserMetadataInlineFormSet, self)._construct_form(i, **kwargs)
+        form.request = self.request
+        return form
+    
+    def save_new(self, form, commit=True):
+        current_user = self.request.user
+        user_metadata = models.UserMetadata.objects.get(user_id=current_user.id)
+        new_user_metadata = super(UserMetadataInlineFormSet, self).save_new(form, commit=False)      
+        if current_user.groups.filter(name='Hotel Group Administrators').exists():
+            new_user_metadata.hotel_group_id = user_metadata.hotel_group_id
+        elif current_user.groups.filter(name='Hotel Administrators').exists():
+            new_user_metadata.hotel_group_id = user_metadata.hotel_group_id
+            new_user_metadata.hotel_id = user_metadata.hotel_id                     
+        if commit:
+            new_user_metadata.save()
+        return new_user_metadata
+
+    # filter the hotel fields based on group
+    # custom changes required  by jquery-chained https://github.com/tuupola/jquery_chained
+    def __init__(self, *args, **kwargs):
+        current_user = self.request.user
+        super(UserMetadataInlineFormSet, self).__init__(*args, **kwargs)
+        user_metadata = models.UserMetadata.objects.get(user_id=current_user.id)
+        if current_user.groups.filter(name='Hotel Group Administrators').exists():            
+            self.forms[0].fields['hotel_group'].initial = user_metadata.hotel_group_id
+            # self.forms[0].fields['hotel_group'].disabled = True
+            self.forms[0].fields['hotel_group'].widget.attrs['readonly'] = True
+        elif current_user.groups.filter(name='Hotel Administrators').exists():
+            self.forms[0].fields['hotel'].initial = user_metadata.hotel_id
+            self.forms[0].fields['hotel_group'].initial = user_metadata.hotel_group_id    
+            self.forms[0].fields['hotel'].disabled = True
+            self.forms[0].fields['hotel_group'].disabled = True 
+        data = {'data-chained': dict(Hotel.objects.values_list('id', 'hotel_group_id'))}
+        data['data-chained'][''] = ''  # empty option
+        self.forms[0].fields['hotel'].widget = RelatedFieldWidgetWrapper(
+            DataGroupSelect(
+                choices=self.forms[0].fields['hotel'].choices,
+                data=data,
+            ),
+            self.forms[0].fields['hotel'].widget.rel,
+            self.forms[0].fields['hotel'].widget.admin_site,
+            self.forms[0].fields['hotel'].widget.can_add_related,
+            self.forms[0].fields['hotel'].widget.can_change_related,
+            self.forms[0].fields['hotel'].widget.can_delete_related,
+        )              
+        
+            
+# Define an inline admin descriptor for Employee model
+# which acts a bit like a singleton
+# rename to "Additiona Info"
+# only display certain fields
+class UserMetadataInline(admin.StackedInline):             
+    model = models.UserMetadata
+    can_delete = False
+    verbose_name = "Additional Info"
+    verbose_name_plural = "Additional Info"    
+    view_on_site = False
+    formset = UserMetadataInlineFormSet    
+    def get_formset(self, request, obj=None, **kwargs):
+        formset = super(UserMetadataInline, self).get_formset(request, obj, **kwargs)
+        formset.request = request
+        return formset    
+    def get_fieldsets(self, request, obj=None):
+        return [(None, {'fields': (
+            'middle_name',
+            'hotel_group', 
+            'hotel', 
+        )})]     
+
+# include first name and last name, username is now an email address 
+class UserCreationForm(BaseUserCreationForm):
+    class Meta:
+        model = User
+        fields = ('first_name', 'last_name', 'username','password1', 'password2')
+
+    username = forms.EmailField(label='Email', max_length=255)
+
+    def save(self, commit=True):
+        user = super(UserCreationForm, self).save(commit=False)
+        user.email = user.username
+        user.save()
+        return user
+        
+# Define a new User admin
+class UserAdmin(BaseUserAdmin):
+    add_form = UserCreationForm
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('first_name', 'last_name', 'username', 'password1', 'password2')}),)    
+    # filter the choices of user groups based on existing user group
+    # group administrators can only assign hotel administrators and group administrators
+    # hotel administrators can only assign hotel administrators
+    def get_form(self, request, obj=None, **kwargs):
+        # Get form from original UserAdmin.
+        form = super(UserAdmin, self).get_form(request, obj, **kwargs)
+        current_user = request.user
+        if 'groups' in form.base_fields:
+            if current_user.groups.filter(name='Hotel Group Administrators').exists():
+                groups = form.base_fields['groups']
+                groups.queryset = groups.queryset.filter(name__in=['Hotel Group Administrators', 'Hotel Administrators'])
+            elif current_user.groups.filter(name='Hotel Administrators').exists():
+                groups = form.base_fields['groups']
+                groups.queryset = groups.queryset.filter(name='Hotel Administrators')
+        return form  
+    # limit fields sets, i.e. remove permissions  
+    def get_fieldsets(self, request, obj=None):
+        if not obj:
+            return self.add_fieldsets
+
+        if request.user.is_superuser:
+            perm_fields = ('is_active', 'is_staff', 'is_superuser',
+                           'groups', 'user_permissions')
+        else:
+            # modify these to suit the fields you want your
+            # staff user to be able to edit
+            perm_fields = ('is_active', 'is_staff', 'groups')
+
+        return [(None, {'fields': ('username', 'password')}),
+                (_('Personal info'), {'fields': ('first_name', 'last_name', 'email')}),
+                (_('Permissions'), {'fields': perm_fields}),
+                (_('Important dates'), {'fields': ('last_login', 'date_joined')})]             
+    # user addtional information fields on change 
+    inlines = [UserMetadataInline,]
+    # def change_view(self, request, object_id):
+    #   self.inlines=[UserMetadataInline,]
+    #   return super(UserAdmin, self).change_view(request, object_id)    
+    # define query set to filter for hotel and group administrators
+    def get_queryset(self, request):
+        qs = super(UserAdmin, self).get_queryset(request)  
+        # get current user
+        current_user = request.user    
+        try:
+            # get user metadata
+            user_metadata = models.UserMetadata.objects.get(user_id=current_user.id)
+            # check if user is global, group or hotel
+            if current_user.groups.filter(name='Hotel Group Administrators').exists():
+                hotel_group_id = user_metadata.hotel_group_id
+                return qs.filter(usermetadata__hotel_group_id=hotel_group_id)
+            elif current_user.groups.filter(name='Hotel Administrators').exists():
+                hotel_id = user_metadata.hotel_id
+                return qs.filter(usermetadata__hotel_group_id=hotel_id)
+            return qs
+        except models.UserMetadata.DoesNotExist:     
+            return User.objects.none()
+        return User.objects.none()    
+
+# Re-register UserAdmin
+admin.site.unregister(User)
+admin.site.register(User, UserAdmin)

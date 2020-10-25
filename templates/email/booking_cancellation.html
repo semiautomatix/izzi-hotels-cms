@@ -1,0 +1,16 @@
+{% autoescape off %}
+
+Hi {{ user.first_name }} {{ user.last_name }},
+
+This is confirmation of cancellation of your booking at {{ site_name }}.
+
+Hotel: {{ booking.hotel.hotel_name }}, {{ booking.hotel.city }}
+Start date: {{ booking.start_date }}
+End date: {{ booking.end_date }}
+Number of rooms: {{ booking.rooms }}
+Number of adults: {{ booking.adults }}
+Number of children: {{ booking.children }}
+
+{% block salutation %}The {{ site_name }} team{% endblock %}
+
+{% endautoescape %}

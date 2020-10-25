@@ -1,0 +1,92 @@
+{% load humanize %}
+
+<!doctype html>
+<html lang="en">
+
+<head>
+  <title>Big Analytics</title>  
+  <link rel="stylesheet" href="//fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="//code.getmdl.io/1.3.0/material.indigo-pink.min.css">  
+  <script
+    src="//code.jquery.com/jquery-3.4.1.min.js"
+    integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+    crossorigin="anonymous">
+  </script>  
+  <script defer src="//code.getmdl.io/1.3.0/material.min.js"></script> 
+</head>
+
+<body>
+  <div id="{{ module.children.prefix }}_container" style="min-width: 310px; height: 400px; margin: 0 auto" class="border">  
+  </div>
+
+  <script>   
+    const {{ module.children.prefix }}_data = {{ module.children.hotel_groups|safe }};
+    const {{ module.children.prefix }}_chart = Highcharts.chart('{{ module.children.prefix }}_container', {
+      chart: {
+        type: 'bar'
+      },
+      colors: ['#FFFFFF','#FFFFEE','#F2F2F2','#f0f0ee','#E3E3EA','#DADBF2','#D7D7DD','#CCCEFF','#BBBBDD','#AABBDD','#ADAFD8','#999EFF','#8888AA','#797FF2','#2E3164'].reverse(),
+      title: {
+          text: `<div>
+            <span style="color: #6f7e95; font-family: Arial,sans-serif">Confirmed Bookings</span>
+            <div>
+              <label class="mdl-switch mdl-js-switch mdl-js-ripple-effect" for="{{ module.children.prefix }}_switch-1" style="width: 0; margin: 10px;">
+                <input type="checkbox" id="{{ module.children.prefix }}_switch-1" class="mdl-switch__input" onchange={{ module.children.prefix }}_redraw(this.checked) />
+                <span class="mdl-switch__label" style="color: #6f7e95; font-family: Arial,sans-serif;">Cities</span>
+              </label>              
+            </div>
+          </div>`,
+          useHTML: true,
+          align: "left",
+      },
+      xAxis: {
+        type: 'category'
+      },   
+      yAxis: {
+        title: {
+            text: 'Total bookings'
+        }
+      },        
+      legend: {
+          enabled: false
+      },
+      series: [{
+        name: 'Hotel Group',
+        colorByPoint: true,
+        data: {{ module.children.prefix }}_data
+      }],
+      drilldown: {
+          series: JSON.parse(("{{ module.children.drilldown_hotels }}").replace(/&quot;/g,'"')) // clone
+      },
+      credits: {
+        enabled: false
+      },      
+    });    
+
+    function {{ module.children.prefix }}_redraw(cities) {    
+      const drilldown_hotels = JSON.parse(("{{ module.children.drilldown_hotels }}").replace(/&quot;/g,'"'));
+      const drilldown_cities = JSON.parse(("{{ module.children.drilldown_cities }}").replace(/&quot;/g,'"'));
+      const series = cities ? drilldown_cities: drilldown_hotels;  // clone
+      const chart = {{ module.children.prefix }}_chart;
+      chart.update({
+        drilldown: {
+            series
+        }
+      });   
+      const ddCurrent = chart.series[0].userOptions.id;
+      const ddSeries = chart.options.drilldown.series;
+      if (ddCurrent === undefined) {
+          chart.series[0].setData(chart.options.series[0].data);
+      } else {
+          for (let i = 0, ie = ddSeries.length; i < ie; ++i) {
+              if (ddSeries[i].id === ddCurrent) {
+                  chart.series[0].setData(ddSeries[i].data);
+              }
+          }
+      }      
+      chart.redraw(true);
+    }
+  </script>
+</body>
+
+</html>

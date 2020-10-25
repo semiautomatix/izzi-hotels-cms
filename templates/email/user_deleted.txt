@@ -1,0 +1,9 @@
+{% autoescape off %}
+
+Your account at {{ site_name }} has been deleted.
+
+User name: {{ user.username }}
+
+{% block salutation %}The {{ site_name }} team{% endblock %}
+
+{% endautoescape %}

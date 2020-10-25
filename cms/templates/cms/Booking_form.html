@@ -1,0 +1,45 @@
+
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+    
+<p>
+    <a class="btn btn-light" href="{% url 'cms_Booking_list' %}">
+    Booking Listing
+    </a>
+</p>
+    
+<form method="post">
+{% csrf_token %}
+  <div class="form-group row">
+  <label class="col-sm-2 col-form-label" for="end_date">end_date: </label>
+  <input class="form-control col-sm-10" id="end_date" type="text" name="end_date" value="{{ object.end_date }}">
+  </div>
+  <div class="form-group row">
+  <label class="col-sm-2 col-form-label" for="adults">adults: </label>
+  <input class="form-control col-sm-10" id="adults" type="number" name="adults" value="{{ object.adults }}">
+  </div>
+  <div class="form-group row">
+  <label class="col-sm-2 col-form-label" for="start_date">start_date: </label>
+  <input class="form-control col-sm-10" id="start_date" type="text" name="start_date" value="{{ object.start_date }}">
+  </div>
+  <div class="form-group row">
+  <label class="col-sm-2 col-form-label" for="booking_status">booking_status: </label>
+  <input class="form-control col-sm-10" id="booking_status" type="text" name="booking_status" value="{{ object.booking_status }}">
+  </div>
+  <div class="form-group row">
+  <label class="col-sm-2 col-form-label" for="created">created: </label>
+  <input class="form-control col-sm-10" id="created" type="date" name="created" value="{{ object.created }}" disabled>
+  </div>
+  <div class="form-group row">
+  <label class="col-sm-2 col-form-label" for="children">children: </label>
+  <input class="form-control col-sm-10" id="children" type="text" name="children" value="{{ object.children }}">
+  </div>
+  <div class="form-group row">
+  <label class="col-sm-2 col-form-label" for="last_updated">last_updated: </label>
+  <input class="form-control col-sm-10" id="last_updated" type="date" name="last_updated" value="{{ object.last_updated }}" disabled>
+  </div>
+  <input type="submit" value="Save" class="btn btn-primary">
+</form>
+
+{% endblock %}

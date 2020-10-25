@@ -1,0 +1,23 @@
+
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+    
+<p>
+    <a class="btn btn-light" href="{% url 'cms_Booking_list' %}">
+    Booking Listing
+    </a>
+</p>
+    
+<table class="table">
+    <tr><td>end_date</td><td>{{ object.end_date }}</td></tr>
+    <tr><td>adults</td><td>{{ object.adults }}</td></tr>
+    <tr><td>start_date</td><td>{{ object.start_date }}</td></tr>
+    <tr><td>booking_status</td><td>{{ object.booking_status }}</td></tr>
+    <tr><td>created</td><td>{{ object.created }}</td></tr>
+    <tr><td>children</td><td>{{ object.children }}</td></tr>
+    <tr><td>last_updated</td><td>{{ object.last_updated }}</td></tr>
+</table>
+<a class="btn btn-primary" href="{{object.get_update_url}}">Edit</a>
+
+{% endblock %}

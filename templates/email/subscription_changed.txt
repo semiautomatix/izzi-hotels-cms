@@ -1,0 +1,9 @@
+{% autoescape off %}
+
+Subscription rates have been changed on {{ site_name }}
+
+New rate: {{subscription.subscription_rate}} per {{subscription.subscription_unit}}
+
+{% block salutation %}The {{ site_name }} team{% endblock %}
+
+{% endautoescape %}

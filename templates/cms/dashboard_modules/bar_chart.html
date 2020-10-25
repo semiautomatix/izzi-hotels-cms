@@ -1,0 +1,205 @@
+{% load humanize %}
+
+<!doctype html>
+<html lang="en">
+
+<head>
+  <title>Big Analytics</title>  
+  <link rel="stylesheet" href="//fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="//code.getmdl.io/1.3.0/material.indigo-pink.min.css">  
+  <script
+    src="//code.jquery.com/jquery-3.4.1.min.js"
+    integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+    crossorigin="anonymous">
+  </script>  
+  <script defer src="//code.getmdl.io/1.3.0/material.min.js"></script> 
+</head>
+
+<body>
+  <div id="{{ module.children.prefix }}_container" style="min-width: 310px; height: 400px; margin: 0 auto" class="border">  
+  </div>
+
+  <script>  
+    class {{ module.children.prefix }}Chart { 
+        constructor() {      
+        this.data = {{ module.children.data|safe }};
+        this.isGlobal = this.data[0] && this.data[0].hotel_group_id;
+
+        // check if hotel group exists
+        this.series_data = this.isGlobal ? this.data.reduce(
+          (acc, cur) => {
+            const exists = acc.find(
+              (row) => row.name === cur.hotel_group__hotel_group_name
+            );
+            if (exists) {
+                exists.y += cur.total 
+            } else {
+              acc.push({
+                name: cur.hotel_group__hotel_group_name,
+                drilldown: cur.hotel_group_id,
+                y: cur.total
+              })
+            }
+            return acc;
+          }, [] 
+        ) : this.data.reduce(
+          (acc, cur) => {
+            const exists = acc.find(
+              (row) => row.name === cur.hotel_group__hotel_group_name
+            );
+            if (exists) {
+                exists.y += cur.total 
+            } else {
+              acc.push({
+                name: cur.hotel__hotel_name,
+                id: cur.hotel_id,
+                y: cur.total
+              })
+            }
+            return acc;
+          }, [] 
+        );
+
+        const drilldown_data = this.series_data.map(
+          (series_data) => {        
+            const _data = this.data.filter(
+                (row) => row.hotel_group_id === series_data.drilldown
+              ).reduce(
+              (acc, cur) => {
+                const exists = acc.find(
+                  (row) => row[0] === cur.hotel_hotel_name
+                );
+                if (exists) {
+                    exists[1] += cur.total 
+                } else {
+                  acc.push([cur.hotel__hotel_name, cur.total])
+                }
+                return acc;
+              }, [] 
+            );
+            return {
+              id: series_data.drilldown,
+              data: _data
+            }
+          }
+        )
+
+        this.chart = Highcharts.chart('{{ module.children.prefix }}_container', {
+          chart: {
+            type: 'bar'
+          },
+          colors: ['#FFFFFF','#FFFFEE','#F2F2F2','#f0f0ee','#E3E3EA','#DADBF2','#D7D7DD','#CCCEFF','#BBBBDD','#AABBDD','#ADAFD8','#999EFF','#8888AA','#797FF2','#2E3164'].reverse(),
+          title: {
+              text: `<div>
+                <span style="color: #6f7e95; font-family: Arial,sans-serif">{{ module.children.title }}</span>
+                <div>
+                  <label class="mdl-switch mdl-js-switch mdl-js-ripple-effect" for="{{ module.children.prefix }}_switch-1" style="width: 0; margin: 10px;">
+                    <input type="checkbox" id="{{ module.children.prefix }}_switch-1" class="mdl-switch__input" onchange={{ module.children.prefix }}_chart.redraw(this.checked) />
+                    <span class="mdl-switch__label" style="color: #6f7e95; font-family: Arial,sans-serif;">Cities</span>
+                  </label>              
+                </div>
+              </div>`, // https://www.daterangepicker.com/
+              useHTML: true,
+              align: "left",
+          },
+          xAxis: {
+            type: 'category'
+          },   
+          yAxis: {
+            title: {
+                text: 'Total bookings'
+            }
+          },         
+          tooltip: {
+            headerFormat: '<span style="font-size:11px">{series.name}</span><br>',
+            pointFormat: '<span style="color:{point.color}">{point.name}</span>: <b>{point.y}</b> bookings<br/>'
+          },
+          legend: {
+              enabled: false
+          },
+          series: [{
+            name: 'Hotel Group',
+            colorByPoint: true,
+            data: this.series_data
+          }],
+          drilldown: {
+            series: this.isGlobal && drilldown_data // clone
+          },
+          credits: {
+            enabled: false
+          },        
+        });    
+      }     
+      redraw(cities) {    
+        const drilldown_data = cities ? 
+          this.series_data.map(
+            (series_data) => {        
+              const data = this.data.filter(
+                  (row) => row.hotel_group_id === series_data.drilldown
+                ).reduce(
+                (acc, cur) => {
+                  const exists = acc.find(
+                    (row) => row[0] === cur.hotel__city
+                  );
+                  if (exists) {
+                      exists[1] += cur.total 
+                  } else {
+                    acc.push([cur.hotel__city, cur.total])
+                  }
+                  return acc;
+                }, [] 
+              );
+              return {
+                id: series_data.drilldown,
+                data
+              }
+            }
+          ): 
+          this.series_data.map(
+            (series_data) => {        
+              const data = this.data.filter(
+                  (row) => row.hotel_group_id === series_data.drilldown
+                ).reduce(
+                (acc, cur) => {
+                  const exists = acc.find(
+                    (row) => row[0] === cur.hotel_hotel_name
+                  );
+                  if (exists) {
+                      exists[1] += cur.total 
+                  } else {
+                    acc.push([cur.hotel__hotel_name, cur.total])
+                  }
+                  return acc;
+                }, [] 
+              );
+              return {
+                id: series_data.drilldown,
+                data
+              }
+            }
+          );  // clone
+        this.chart.update({
+          drilldown: {
+              series: drilldown_data
+          }
+        });   
+        const ddCurrent = this.chart.series[0].userOptions.id;
+        const ddSeries = this.chart.options.drilldown.series;
+        if (ddCurrent === undefined) {
+            this.chart.series[0].setData(this.chart.options.series[0].data);
+        } else {
+            for (let i = 0, ie = ddSeries.length; i < ie; ++i) {
+                if (ddSeries[i].id === ddCurrent) {
+                    this.chart.series[0].setData(ddSeries[i].data);
+                }
+            }
+        }      
+        this.chart.redraw(true);
+      }
+    }
+
+    {{ module.children.prefix }}_chart = new {{ module.children.prefix }}Chart();
+  </script>
+</body>
+
+</html>

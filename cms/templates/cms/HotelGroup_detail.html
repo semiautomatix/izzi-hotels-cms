@@ -1,0 +1,25 @@
+
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+    
+<p>
+    <a class="btn btn-light" href="{% url 'cms_HotelGroup_list' %}">
+    HotelGroup Listing
+    </a>
+</p>
+    
+<table class="table">
+    <tr><td>logo</td><td>{{ object.logo }}</td></tr>
+    <tr><td>head_office_postal_code</td><td>{{ object.head_office_postal_code }}</td></tr>
+    <tr><td>head_office_country</td><td>{{ object.head_office_country }}</td></tr>
+    <tr><td>hotel_group_name</td><td>{{ object.hotel_group_name }}</td></tr>
+    <tr><td>head_office_address</td><td>{{ object.head_office_address }}</td></tr>
+    <tr><td>head_office_city</td><td>{{ object.head_office_city }}</td></tr>
+    <tr><td>last_updated</td><td>{{ object.last_updated }}</td></tr>
+    <tr><td>head_office_geolocation</td><td>{{ object.head_office_geolocation }}</td></tr>
+    <tr><td>created</td><td>{{ object.created }}</td></tr>
+</table>
+<a class="btn btn-primary" href="{{object.get_update_url}}">Edit</a>
+
+{% endblock %}
